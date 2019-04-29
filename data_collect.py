@@ -1,50 +1,47 @@
-#%% [markdown]
-#### Import Packages
-
-#%%
-
-# import python packages
 import requests
 from lxml import html
 import csv
-import pandas as pd
-#%matplotlib inline
-import matplotlib.pyplot as plt
 
-from os import path
-from PIL import Image
-from wordcloud import WordCloud, STOPWORDS
+import links
+import functions
 
-import numpy as np
-from collections import Counter
-
-# import nltk (natural language tool kit), a popular python package for text mining
-import nltk
-# stopwords, FreqDist, word_tokenize
-from nltk.corpus import stopwords
-from nltk import FreqDist, word_tokenize
-from nltk.stem.porter import PorterStemmer
-from nltk.stem import WorpytpipdNetLemmatizer
-
-from nltk.corpus import stopwords
-from textblob import TextBlob
-
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from nltk import tokenize
-
-from pattern.en import sentiment
+from bs4 import BeautifulSoup
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from os import path
 
-# Import and Function too allow using markdown print in Code
-from IPython.display import Markdown, display
+## Get list of canceled/renewed TV shows
+http = urllib3.PoolManager()
 
-def printmd(str):
-    display(Markdown(str))
+url = 'https://www.metacritic.com/feature/tv-renewal-scorecard-2017-2018-season'
 
-import re
+fp = http.request('GET', url)
+soup = BeautifulSoup(fp.data, features='lxml')
+data = soup.find_all('p', {'class':'medium'})
 
-#%% [markdown]
-# Business Understanding
+func = functions.get_data()
+links = links.get_links()
 
-#%% [markodwn]
+for text in data: 
+    if "has renewed" in text.text or "renewed for" in text.text:
+        func.is_renewed(text)
+    elif "canceled" in text.text:
+        func.is_canceled(text)
+    if "rescued" in text.text:
+        func.is_rescued(text)
+
+links.get_IMDb_links('The Wall')
+
+for show in func.renewed:
+    links.get_IMDb_links(show)
+
+links.write_json('renewed')
+
+print(func.renewed)
+print()
+print(func.canceled)
+print()
+print(func.rescued)
+
+print()
