@@ -31,7 +31,7 @@ for text in data:
     if "rescued" in text.text:
         func.is_rescued(text)
 
-links.get_IMDb_links('The Wall')
+links.get_IMDb_links('The Split')
 
 for show in func.renewed:
     links.get_IMDb_links(show)
