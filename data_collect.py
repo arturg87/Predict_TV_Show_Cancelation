@@ -31,12 +31,26 @@ for text in data:
     if "rescued" in text.text:
         func.is_rescued(text)
 
-links.get_IMDb_links('The Split')
+for i in func.removeFromCanceled:
+    func.canceled = [x for x in func.canceled if x != i]
 
+func.remove_duplicates()
+
+for show in func.rescued:
+    links.get_IMDb_links(show)
+    
+links.write_json('rescued')
+
+for show in func.canceled:
+    links.get_IMDb_links(show)
+
+links.write_json('canceled')  
+  
 for show in func.renewed:
     links.get_IMDb_links(show)
 
 links.write_json('renewed')
+
 
 print(func.renewed)
 print()
