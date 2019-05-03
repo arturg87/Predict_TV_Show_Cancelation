@@ -13,7 +13,8 @@ class get_links:
     def __init__(self):
         self.imdb_link_data = []
         
-    def get_IMDb_links(self, show_name):
+    def get_IMDb_links(self, importData):
+        show_name = importData['show_name']
 
         # Store IMDb Link Data
         stoplist = ['Marvel\'s']
@@ -65,7 +66,8 @@ class get_links:
             else:
                 self.imdb_link_data.append({
                     'tv_show_imdb_link':link,
-                    'tv_show_name':[title]
+                    'tv_show_name':[title],
+                    'tv_show_network': importData['network']
                 })
 
         print(show_name, title, link)
@@ -101,11 +103,11 @@ def internal_check_name(show_name, titleToCheck):
     flag = False
 
     # Special cases
-    test_list = ['Rapunzel\'s Tangled Adventure', '100 000 Pyramid', 'Anne With an E', 'The Circus', 'Floribama Shore', 'Me Myself   I']
+    test_list = ['Rapunzel\'s Tangled Adventure', '100000 Pyramid', 'Anne With an E', 'The Circus', 'Floribama Shore', 'Me Myself   I']
 
     # Strip out non alphanumeric chars    
-    show_name = re.sub('[^a-zA-Z0-9]', ' ', show_name).strip()
-    titleToCheck = re.sub('[^a-zA-Z0-9]', ' ', titleToCheck).strip()
+    show_name = re.sub(r'[^a-zA-Z0-9\s]', '', show_name).strip()
+    titleToCheck = re.sub(r'[^a-zA-Z0-9\s]', '', titleToCheck).strip()
 
     # is the search title the same as the result title?
     if show_name.lower() == titleToCheck.lower():

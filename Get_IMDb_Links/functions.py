@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup
+import re
 
 class get_data:
 
@@ -11,37 +11,66 @@ class get_data:
            
     def is_renewed(self, text):
         for i in text.find_all('strong'):
-            if "under the title" in text.text:
-                self.renewed.append(text.find_all('strong')[1].text.strip())
-                break
-            else:
-                self.renewed.append(i.text.strip())
+            network = internal_get_network(text)
+
+            self.renewed.append({
+                'show_name':i.text.strip(), 
+                'network': network
+            })
+            break
 
     def is_canceled(self, text):
         for i in text.find_all('strong'):
-            if "under the title" in text.text:
-                self.canceled.append(text.find_all('strong')[1].text.strip())
+            # Special case.
+            if i.text.strip() == 'LA→Vegas':
+                network = internal_get_network(text)
+
+                self.canceled.append({
+                    'show_name':'LA to Vegas', 
+                    'network': network
+                })
                 break
+            elif "untitled" in i.text.strip():
+                pass
             else:
-                # Special case.
-                if i.text.strip() == 'LA→Vegas':
-                    self.canceled.append('LA to Vegas')
-                elif "untitled" in i.text.strip():
-                    pass
-                else:
-                    self.canceled.append(i.text.strip())
-    
+                network = internal_get_network(text)
+
+                self.canceled.append({
+                    'show_name':i.text.strip(), 
+                    'network': network
+                })
+                break
+
     def is_rescued(self, text):
         for i in text.find_all('strong'):
-            if "under the title" in text.text:
-                self.rescued.append(text.find_all('strong')[1].text.strip())
-                self.removeFromCanceled.append(text.find_all('strong')[1].text.strip())
-                break
-            else:
-                self.rescued.append(i.text.strip())
-                self.removeFromCanceled.append(i.text.strip())
+            network = internal_get_network(text)
+
+            self.rescued.append({
+                'show_name':i.text.strip(), 
+                'network': network
+            })
+    
+            self.removeFromCanceled.append({
+                'show_name':i.text.strip(), 
+                'network': network
+            })
 
     def remove_duplicates(self):
-        self.canceled = list(set(self.canceled))  
-        self.renewed = list(set(self.renewed))  
-        self.rescued = list(set(self.rescued))  
+        self.canceled = [ dict(t) for t in { tuple(d.items()) for d in self.canceled } ]  
+        self.renewed = [ dict(t) for t in { tuple(d.items()) for d in self.renewed } ]
+        self.rescued = [ dict(t) for t in { tuple(d.items()) for d in self.rescued } ]  
+
+def internal_get_network(data):
+    removeList = ['13-episode', 'probably']
+    try:
+        network = re.search(r'\(([^\)]+)\)', data.text).group(1)
+    except:
+        network = None
+
+    if len(str(network)) > 15:
+        network = None
+
+    if (str(network).lower() in removeList):
+        network = None
+
+    return network

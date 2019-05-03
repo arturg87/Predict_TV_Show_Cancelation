@@ -49,8 +49,8 @@ class searchTwitter():
                 name = i.name
                 description = i.description
                 
-                queryTest = re.sub('[^a-zA-Z0-9\s]', '', query)
-                nameTest = re.sub('[^a-zA-Z0-9\s]', '', name)
+                queryTest = re.sub(r'[^a-zA-Z0-9\s]', '', query)
+                nameTest = re.sub(r'[^a-zA-Z0-9\s]', '', name)
 
                 check1 = (queryTest in nameTest) or (nameTest in queryTest)
                 check2 = ("official" in description.lower())

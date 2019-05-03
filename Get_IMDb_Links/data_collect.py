@@ -1,7 +1,3 @@
-import requests
-from lxml import html
-import csv
-
 import links
 import functions
 
@@ -9,7 +5,6 @@ from bs4 import BeautifulSoup
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-from os import path
 
 ## Get list of canceled/renewed TV shows
 http = urllib3.PoolManager()
@@ -23,6 +18,8 @@ data = soup.find_all('p', {'class':'medium'})
 func = functions.get_data()
 links = links.get_links()
 
+#links.get_IMDb_links('$100,000 Pyramid')
+
 # Parse webpage to create a list of canceled\renewed\rescued tv shows
 for text in data: 
     if "has renewed" in text.text or "renewed for" in text.text:
@@ -34,7 +31,7 @@ for text in data:
 
 # If show was rescued, remove from canceled list if there
 for i in func.removeFromCanceled:
-    func.canceled = [x for x in func.canceled if x != i]
+    func.canceled = [x for x in func.canceled if not (x['show_name']==i['show_name'])]
 
 # Remove duplcates from all lists
 func.remove_duplicates()
