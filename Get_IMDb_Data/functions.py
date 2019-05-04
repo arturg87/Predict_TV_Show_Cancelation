@@ -11,6 +11,7 @@ class load_func:
 
     def __init__(self):
         self.tv_show_data = []
+        self.imdb_reviews = []
 
     def load_json(self, name):
         base_json_path = "Predict_TV_Show_Cancelation"
@@ -30,7 +31,7 @@ class load_func:
         try:
             # Get Title
             title = soup.find('div', {'class':'title_wrapper'}).find('h1').text.strip()
-        except Exception as e:
+        except:
             #print("Could not get title for %s" %(json_data['tv_show_name']))
             title = None
 
@@ -44,7 +45,7 @@ class load_func:
             imdbScore = float(re.search(r'(\d.\d*) based on (\d*)', ratingText).group(1))
             imdbScoreNumUsers = int(re.search(r'(\d.\d*) based on (\d*)', ratingText).group(2))
 
-        except Exception as e:
+        except:
             #print("Could not get IMDb Score for %s" %(json_data['tv_show_name']))
             imdbScore = None
             imdbScoreNumUsers = None
@@ -72,7 +73,7 @@ class load_func:
                 #    print("%s does not have any golden globes" %(title))
                 #    pass
                 
-        except Exception as e:
+        except:
             topRatedRank = None
 
         # endregion --------------------------------------------------------
@@ -81,7 +82,7 @@ class load_func:
         try:
             storyline = soup.find('div', {'id':'titleStoryLine'})
         
-        except Exception as e:
+        except:
             storyline = None
         
         # endregion -------------------------------------------------
@@ -97,11 +98,11 @@ class load_func:
                             if "see all" not in text.text.lower():
                                 keywords.append(text.text.strip())  
                         break
-                except Exception as e:
+                except:
                     keywords = None
                     pass
 
-        except Exception as e:
+        except:
             keywords = None
         # endregion -------------------------------------------------
 
@@ -122,7 +123,7 @@ class load_func:
                     genres = None
                     pass
                 
-        except Exception as e:
+        except:
             genres = None
         # endregion -------------------------------------------------
 
@@ -131,13 +132,18 @@ class load_func:
             for each in storyline.contents:
                 try:
                     if "certificate" in each.text.lower().strip():
-                        tvRating = each.find('span').text
-                        break
+                        testStr = each.find('span').text.lower().strip()
+                        if "see all certifications" in testStr:
+                            tvRating = None
+                            break
+                        else:
+                            tvRating = each.find('span').text
+                            break
                 except:
                     tvRating = None
                     pass
 
-        except Exception as e:
+        except:
             tvRating = None
         # endregion -------------------------------------------------
 
@@ -145,7 +151,7 @@ class load_func:
         try:
             details = soup.find('div', {'id':'titleDetails'})
 
-        except Exception as e:
+        except:
             details = None
         # endregion -------------------------------------------------
 
@@ -191,7 +197,7 @@ class load_func:
                 except:
                     sites = None
                     pass
-        except Exception as e:
+        except:
             sites = None
         # endregion -------------------------------------------------
 
@@ -209,7 +215,7 @@ class load_func:
                     country = None
                     pass
 
-        except Exception as e:
+        except:
             country = None
         # endregion -------------------------------------------------
 
@@ -228,7 +234,7 @@ class load_func:
                     language = None
                     pass
 
-        except Exception as e:
+        except:
             language = None
         # endregion -------------------------------------------------
 
@@ -244,7 +250,7 @@ class load_func:
                     releaseDate = None
                     pass
 
-        except Exception as e:
+        except:
             releaseDate = None
         # endregion -------------------------------------------------
 
@@ -259,13 +265,13 @@ class load_func:
                     runtime = None
                     pass
 
-        except Exception as e:
+        except:
             runtime = None
         # endregion -------------------------------------------------
 
         # region user reviews section --------------------------------
         reviews = []
-
+        
         imdbLink = json_data['tv_show_imdb_link']
         movieID = re.search(r"(tt[0-9]{7})", imdbLink).group()
         baseUrl = "https://www.imdb.com/title/%s/reviews/_ajax" %(movieID)
@@ -334,7 +340,9 @@ class load_func:
                         'review_text': reviewText,
                         'percent_found_helpful': percentFoundHelpful
                     })
-            
+                
+                
+
             getReviewData()
 
             if paginationKey is not None:
@@ -360,20 +368,31 @@ class load_func:
             'country': country, 
             'langauge': language,
             'release_date': releaseDate,
-            'runtime': runtime,
-            'user_reviews' : reviews
+            'runtime': runtime, 
+            'tv_network': json_data['tv_show_network']
+        })
+
+        self.imdb_reviews.append({
+            'tv_show_name': title, 
+            'imdb_reviews': reviews 
         })
         print(title)
 
     def write_json(self, which_type):
             # filenames for specific list type
             if which_type == "renewed":
-                filename = 'renewedIMDB_Data.json'
+                filename = 'renewed_IMDB_Data.json'
             elif which_type == "canceled":
-                filename = 'canceledIMDB_Data.json'
+                filename = 'canceled_IMDB_Data.json'
             elif which_type == "rescued":
-                filename = 'rescuedIMDB_Data.json'
-
+                filename = 'rescued_IMDB_Data.json'
+            elif which_type == 'rescued_reviews':
+                filename = 'rescued_imdb_reviews.json'
+            elif which_type == 'renewed_reviews':
+                filename = 'renewed_imdb_reviews.json'
+            elif which_type == 'canceled_reviews':
+                filename = 'canceled_imdb_reviews.json'
+                
             path = 'Predict_TV_Show_Cancelation//Data'
 
             with open(os.path.join(path, filename), 'w') as outfile:
@@ -381,9 +400,14 @@ class load_func:
                 outfile.write('\n')
 
                 count = 1
-                for i in self.tv_show_data:
+                if 'reviews' not in filename:
+                    useList = self.tv_show_data
+                else:
+                    useList = self.imdb_reviews
+
+                for i in useList:
                     json.dump(i, outfile)
-                    if count < len(self.tv_show_data):
+                    if count < len(useList):
                         outfile.write(',\n')
                     else:
                         outfile.write('\n')
