@@ -157,11 +157,10 @@ class load_func:
 
         # region Official Sites  ------------------------------------
         try:
-            
-
             imdbLink = json_data['tv_show_imdb_link']
             movieID = re.search("(tt[0-9]{7})", imdbLink).group()
-            baseUrl = "https://www.imdb.com/title/%s/" %(movieID)
+            baseExtUrl = "https://www.imdb.com/title/%s/" %(movieID)
+            baseUrl = "https://www.imdb.com"
 
             for each in details.contents:
                 try:
@@ -169,7 +168,7 @@ class load_func:
                         sites = []
                         for lnk in each.findAll('a'):
                             if "see more" in lnk.text.lower():                    
-                                sitesListUrl = baseUrl + lnk.get('href')
+                                sitesListUrl = baseExtUrl + lnk.get('href')
                             else: 
                                 sitesListUrl = None
 
